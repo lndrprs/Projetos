@@ -1,0 +1,13 @@
+receivers:
+  apache:
+    endpoint: "http://web:80/server-status?auto"
+        
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889" 
+
+service:
+  pipelines:
+    metrics:
+      receivers: [apache]
+      exporters: [prometheus]
