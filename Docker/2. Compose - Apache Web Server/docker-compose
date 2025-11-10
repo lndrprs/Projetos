@@ -1,0 +1,57 @@
+---
+services:
+  web:
+    image: httpd:2.4
+    container_name: apache_server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./status.conf:/usr/local/apache2/conf/extra/status.conf
+    command: >
+      sh -c "echo 'Include conf/extra/status.conf' >> /usr/local/apache2/conf/httpd.conf && httpd-foreground"
+    networks:
+      - observability
+
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:nightly
+    container_name: otel-collector
+    command:
+      - --config=/etc/otel/config.yaml
+    volumes:
+      - ./otel-config.yaml:/etc/otel/config.yaml
+    ports:
+      - 4317:4317
+      - 4318:4318
+      - 8889:8889   
+    networks:
+      - observability
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    depends_on:
+      - otel-collector
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    networks:
+      - observability
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin@2025
+
+networks:
+  observability:
+    driver: bridge
