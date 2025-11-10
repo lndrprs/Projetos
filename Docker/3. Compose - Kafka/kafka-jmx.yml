@@ -1,0 +1,9 @@
+lowercaseOutputName: true
+rules:
+  - pattern: 'kafka.server<type=(.+), name=(.+)PerSec\w*><>Count'
+    name: kafka_server_$1_$2_total
+    type: counter
+    help: Kafka server metric $1 $2 total
+  - pattern: 'kafka.server<type=(.+), name=(.+)><>([a-zA-Z]+)'
+    name: kafka_server_$1_$2_$3
+    type: gauge
