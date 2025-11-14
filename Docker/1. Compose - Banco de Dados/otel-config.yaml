@@ -54,11 +54,73 @@ receivers:
       sqlserver.processes.blocked:
         enabled: true
 
+  oracledb:
+    datasource: "oracle://pdbadmin:Admin!docker123D@oracle:1521/ORCLPDB1"
+    collection_interval: 1800s
+
+    events:
+      db.server.query_sample:
+        enabled: true
+      db.server.top_query:
+        enabled: true
+
+    query_sample_collection:
+      max_rows_per_query: 100
+
+    top_query_collection:
+      top_query_count: 50
+
+    metrics:
+      oracledb.dml_locks.limit:
+        enabled: true
+      oracledb.dml_locks.usage:
+        enabled: true
+      oracledb.enqueue_deadlocks:
+        enabled: true
+      oracledb.enqueue_locks.limit:
+        enabled: true
+      oracledb.enqueue_locks.usage:
+        enabled: true
+      oracledb.executions:
+        enabled: true
+      oracledb.pga_memory:
+        enabled: true
+      oracledb.processes.limit:
+        enabled: true
+      oracledb.processes.usage:
+        enabled: true
+      oracledb.sessions.limit:
+        enabled: true
+      oracledb.sessions.usage:
+        enabled: true
+      oracledb.tablespace_size.limit:
+        enabled: true
+      oracledb.tablespace_size.usage:
+        enabled: true
+      oracledb.transactions.limit:
+        enabled: true
+      oracledb.transactions.usage:
+        enabled: true
+      oracledb.logons:
+        enabled: true
+
 processors:
   batch:
-    timeout: 10s
+    timeout: 5s
     send_batch_size: 512
     send_batch_max_size: 1024
+
+  resource/oracle:
+    attributes:
+      - key: service.name
+        value: "oracle-db"
+        action: upsert
+      - key: service.namespace
+        value: "database"
+        action: upsert
+      - key: service.instance.id
+        action: insert
+        value: "orclpdb1"
 
 exporters:
   prometheus:
@@ -69,12 +131,13 @@ exporters:
 
 service:
   pipelines:
+
     metrics:
-      receivers: [sqlserver]
+      receivers: [sqlserver, oracledb]
       processors: [batch]
       exporters: [prometheus]
 
     logs:
-      receivers: [sqlserver]
-      processors: [batch]
+      receivers: [sqlserver, oracledb]   
+      processors: [resource/oracle, batch]
       exporters: [otlphttp]
