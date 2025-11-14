@@ -92,8 +92,8 @@ services:
       sqlserver:
         condition: service_healthy
       oracle:
-        condition: service_healthy 
-
+        condition: service_healthy   
+        
 networks:
   observability:
     driver: bridge
